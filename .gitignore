@@ -143,3 +143,7 @@ dmypy.json
 # Logs and databases
 *.log
 *.sqlite 
+
+# Binance API docs
+instructions/binance-spot-api-docs
+

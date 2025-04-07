@@ -1,0 +1,65 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+I. Planning & Design Phase (Before Coding)
+1. Understand Goal & Context:
+    * Thoroughly grasp the purpose and requirements of the task.
+    * Ask clarifying questions if the request is ambiguous, incomplete, or could be interpreted in multiple ways. This is crucial to prevent incorrect assumptions that lead to flawed code.
+    * Consider the context (e.g., script, library, UI) to apply appropriate rigor.
+2. Top-Down Design:
+    * Start with a high-level overview.
+    * Define the overall architecture, identifying key components and their interactions.
+3. Interface-First Design:
+    * Define clear, simple, and stable interfaces for components before implementation.
+    * Specify: Inputs (types, constraints), Outputs (types), Pre/Post-conditions, Expected behavior, Side effects.
+    * Design for loose coupling and high cohesion.
+4. Decomposition:
+    * Break the task into the smallest logical, independent subtasks (functions/methods/modules).
+    * Ensure clear boundaries and responsibilities for each unit to facilitate testing and maintenance.
+II. Implementation Phase (Writing Code)
+1. Prioritize Research & Verification:
+    * CRITICAL: If unfamiliar with a library, framework, API, function, method, or feature, stop and verify its existence and usage.
+    * Consult Official Documentation First: Prioritize official documentation or highly reputable sources for verification.
+    * Verify Signatures & Parameters: Double-check function/method names, parameter names, types, and return values.
+    * Do Not Invent: Never invent functions, methods, classes, parameters, or API endpoints if they cannot be verified through reliable sources. It is better to state the inability to fulfill the request accurately or ask for more information than to generate potentially incorrect code.
+    * Prefer Stable & Documented Features: Use well-established, documented features over experimental or potentially deprecated ones unless specifically requested and verified.
+2. Generate Incrementally & Verify Steps (for complex tasks):
+    * For complex requests, generate code in smaller, logical increments.
+    * Mentally (or actually, if possible) verify each step or snippet before proceeding to the next. Ensure the generated code aligns with verified information and the overall goal.
+3. Follow Conventions & Standards:
+    * Strictly adhere to language-specific conventions (e.g., PEP 8 for Python) for naming, formatting, etc.
+    * Use linters/formatters where possible.
+4. Write Clean, Readable, Maintainable Code:
+    * Prioritize simplicity and clarity (KISS). Avoid unnecessary complexity.
+    * Use meaningful and descriptive names.
+    * Use named constants instead of magic numbers/strings.
+5. Apply Design Principles & Patterns Wisely:
+    * Implement SOLID principles where appropriate.
+    * Use design patterns when they solve a relevant problem effectively, but avoid over-engineering.
+6. Robust Error Handling & Logging:
+    * Implement comprehensive error handling (e.g., exceptions, checks). Handle expected errors gracefully.
+    * Integrate sensible logging using appropriate levels (DEBUG, INFO, WARNING, ERROR).
+7. Testing:
+    * Write unit tests for individual components, covering core logic and edge cases.
+    * Consider integration tests to verify component interactions.
+8. Security:
+    * Be mindful of potential security vulnerabilities (input validation, data handling, etc.). Sanitize inputs.
+9. Performance:
+    * Write efficient code, but avoid premature optimization. Use appropriate data structures/algorithms. Profile if necessary after ensuring correctness.
+III. Documentation & Explanation
+1. Meaningful Comments:
+    * Comment code logically, explaining the "why" (intent, trade-offs) rather than just the "what".
+    * Explain complex logic, assumptions, or workarounds.
+    * If uncertainty exists about a specific API usage despite research, note it in the comments.
+2. Component Summaries (SUMMARY.md):
+    * For each significant new module/component, create a SUMMARY.md in its folder.
+    * Include:
+        * Purpose: Primary responsibilities.
+        * Approach: Brief technical design/strategy.
+        * Usage: Clear integration examples.
+        * Assumptions/Dependencies: Key assumptions or external needs.
+IV. Review & Refinement
+1. Refactoring:
+    * Be prepared to refactor code to improve clarity, efficiency, or structure as needed. Keep the codebase clean.

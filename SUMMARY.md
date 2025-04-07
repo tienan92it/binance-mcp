@@ -1,77 +1,127 @@
-# Binance MCP Server - Architecture and Design
+# Binance MCP Server - Technical Summary
 
 ## Overview
 
-The Binance MCP Server provides access to Binance cryptocurrency exchange data through the Model Context Protocol (MCP), allowing LLM agents to fetch real-time market data. The server is implemented in Python using the official MCP SDK and requests library for API calls.
+The Binance MCP Server is a Model Context Protocol (MCP) implementation that provides cryptocurrency market data from the Binance exchange. This server acts as a bridge between Binance's API endpoints and Large Language Model (LLM) agents, allowing them to access real-time and historical market data through a standardized interface.
 
 ## Architecture
 
-The project follows a modular design with clear separation of concerns:
+The server follows a modular design pattern with clear separation of concerns:
 
-```
-binance_mcp_server/  
-├── binance_api.py     # Core API interaction module  
-├── commands/          # MCP command definitions  
-│   ├── __init__.py  
-│   ├── market_data.py # Price/order book/historical data commands  
-│   └── market_info.py # Exchange info and metadata commands  
-└── server.py          # Main MCP server setup and initialization
-```
+1. **API Interaction Layer**: Handles direct communication with Binance's REST and WebSocket APIs
+2. **MCP Tool Layer**: Exposes the API functionality as MCP tools and resources
+3. **Server Layer**: Manages MCP protocol communication, authentication, and client connections
 
-## Key Components
+### API Interaction Layer
 
-1. **Binance API Module (`binance_api.py`)**:
-   - Low-level functions to interact with Binance's REST API
-   - Handles HTTP requests, error handling, and response parsing
-   - Pure functions for data retrieval (read-only operations)
+The core API interaction is split into two modules:
 
-2. **Command Modules (`commands/`)**:
-   - Define MCP tools that map to Binance API functions
-   - Provide clear documentation for LLM agents via docstrings
-   - Organized by functional area (market data vs. market info)
+- **`binance_api.py`**: Handles REST API calls to fetch market data, providing a clean interface and error handling
+- **`binance_ws_api.py`**: Manages WebSocket connections for real-time data streams, including connection lifecycle, reconnects, and message processing
 
-3. **Server Module (`server.py`)**:
-   - Initializes the MCP server and registers all commands
-   - Configures server capabilities and dependencies
-   - Handles client connections and protocol management
+These modules abstract away the complexities of HTTP requests, WebSocket protocols, and error handling, allowing the rest of the application to work with simple, typed Python functions.
 
-## Design Decisions
+### MCP Tool Layer
 
-1. **REST-only Implementation**:
-   - Used only REST API endpoints (no WebSockets) for simplicity and reliability
-   - Each command makes direct HTTP requests when called
+The MCP tools are organized into command modules by functionality:
 
-2. **Public Data Focus**:
-   - Server focuses on read-only public data that doesn't require authentication
-   - Avoids security concerns of managing API keys for private endpoints
-   - Can be extended with private endpoints in the future
+- **`commands/market_data.py`**: Commands for retrieving price, order book, and historical data
+- **`commands/market_info.py`**: Commands for exchange metadata and information
+- **`commands/websocket_streams.py`**: Commands for managing WebSocket stream subscriptions
 
-3. **Tool-based Interface**:
-   - Exposed functionality as MCP tools rather than resources
-   - Tools provide a function-like interface that's intuitive for LLMs
-   - Each tool maps to a specific Binance API endpoint
+Each command module follows the same pattern:
+1. Import the FastMCP decorator for tool registration
+2. Define a `register_X_commands(mcp)` function
+3. Implement individual tool functions decorated with `@mcp.tool()`
+4. Call the appropriate API functions and return results in a standardized format
 
-4. **Structured Data Responses**:
-   - Order book data is returned as a dictionary with bids/asks arrays
-   - Historical data is transformed into a more usable format with named fields
-   - Numeric values are converted from strings to appropriate types
+### Server Layer
 
-5. **Error Handling**:
-   - Each API function includes proper error handling
-   - Descriptive error messages include HTTP status codes and response text
-   - Validation for expected response format
+The server is implemented using FastMCP, which handles:
 
-## Future Extensions
+- MCP protocol compliance
+- Tool/resource registration
+- Client connections via STDIO or SSE
 
-1. **Private API Access**:
-   - Add support for authenticated endpoints with API keys
-   - Implement trading functionality (place/cancel orders)
-   - Access account-specific data (balances, trading history)
+## REST API Implementation
 
-2. **Additional Data Sources**:
-   - Add support for other Binance products (futures, margin trading)
-   - Implement additional market data endpoints (liquidations, funding rates)
+The REST API implementation provides access to Binance's market data endpoints:
 
-3. **MCP Resources**:
-   - Expose some static data as MCP resources with URIs
-   - Implement resource subscriptions for data that changes frequently 
+- **Endpoint Mapping**: Each Binance endpoint is mapped to a corresponding Python function in `binance_api.py`
+- **Error Handling**: All API responses include proper error handling with descriptive error messages
+- **Type Conversion**: Numeric values from the API are converted to appropriate Python types
+- **Parameter Validation**: Endpoint parameters are validated before making requests
+
+## WebSocket Implementation
+
+The WebSocket functionality is implemented using a robust connection management system:
+
+### Connection Management
+
+- **BinanceWebSocketManager**: Core class managing WebSocket connections and subscriptions
+- **Connection Pooling**: Reuses connections where appropriate to minimize resources
+- **Automatic Reconnection**: Handles connection failures and attempts to reconnect
+- **Ping/Pong Handling**: Responds to Binance's keepalive messages automatically
+
+### Subscription Management
+
+- **Stream Mapping**: Maps stream names to connection IDs and callbacks
+- **Combined Streams**: Supports Binance's combined stream format for efficient connections
+- **Message Processing**: Dispatches incoming messages to the appropriate callbacks
+
+### Data Handling
+
+- **Event-driven Architecture**: Uses async callbacks to process incoming WebSocket messages
+- **Message Queue**: Maintains a bounded queue of recent messages for each stream
+- **Latest Data Cache**: Keeps track of the most recent data for each active subscription
+
+## MCP Integration
+
+The MCP integration exposes the Binance API capabilities as tools:
+
+- **Tool Definition**: Each API function is exposed as an MCP tool with appropriate docstrings
+- **Parameter Handling**: Tool parameters are passed directly to the underlying API functions
+- **Async Support**: Long-running operations use asyncio for non-blocking execution
+- **Error Formatting**: API errors are formatted appropriately for MCP clients
+
+## Future Enhancements
+
+Planned technical enhancements include:
+
+1. **Authentication Implementation**: Support for private API endpoints using API keys
+2. **Caching Layer**: Implement intelligent caching to reduce API calls and respect rate limits
+3. **Resource Exposures**: Convert appropriate data endpoints to MCP resources for observability
+4. **Enhanced WebSocket Stability**: Improve reconnection strategies and error recovery
+5. **Performance Optimization**: Optimize WebSocket message processing for high-volume streams
+
+## Technical Considerations
+
+### Rate Limiting
+
+Binance imposes rate limits on API requests, which are handled as follows:
+- REST API calls use individual requests with proper error handling
+- WebSocket connections use efficient connection pooling and combined streams
+- Future implementations will include rate limit tracking and throttling
+
+### WebSocket Connection Lifecycle
+
+WebSocket connections in Binance have a 24-hour maximum lifetime, which is managed by:
+- Tracking connection creation time
+- Automatic cleanup of stale connections
+- Graceful reconnection strategies
+
+### Data Consistency
+
+To ensure data consistency, the server:
+- Validates all incoming data against expected schemas
+- Converts string numeric values to appropriate Python types
+- Maintains a standardized output format for API results
+- Handles WebSocket reconnections without data loss
+
+### Security Considerations
+
+While currently implementing only public endpoints, the server architecture is designed with security in mind:
+- Clean separation between API interaction and business logic
+- No persistent storage of sensitive information
+- Proper error handling to prevent information leakage
+- Ready for future integration of authentication mechanisms 

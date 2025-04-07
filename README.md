@@ -7,6 +7,8 @@ A Model Context Protocol (MCP) server that exposes Binance cryptocurrency exchan
 - **Live Price Data**: Get current prices for any trading pair on Binance
 - **Order Book Access**: Retrieve order book snapshots showing buy/sell interest at different price levels
 - **Historical Price Data**: Fetch OHLCV (Open, High, Low, Close, Volume) candlestick data for any timeframe
+- **Real-time WebSocket Streams**: Subscribe to real-time trade, ticker, and order book updates via WebSockets
+- **Comprehensive Market Data**: Access trades, 24hr statistics, aggregate trades, and more
 - **Exchange Information**: Access trading rules, symbol information, and fee structures
 - **Read-only Operation**: All data is fetched via Binance's public REST API (no API keys required)
 - **MCP Standard Compliant**: Works with any MCP-compatible LLM client
@@ -15,7 +17,9 @@ A Model Context Protocol (MCP) server that exposes Binance cryptocurrency exchan
 
 - Python 3.8+
 - `mcp` package with CLI tools (`mcp[cli]`)
-- `requests` library
+- `requests` library for REST API
+- `websockets` library for WebSocket streams
+- `uvicorn` for serving (optional)
 
 ## Installation
 
@@ -92,23 +96,111 @@ This script connects to the server and retrieves various types of market data.
   - Example: `get_historical_prices(symbol="BTCUSDT", interval="1h", limit=24)`
   - Valid intervals: "1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M"
 
+- **get_recent_trades(symbol, limit=20)**: Get the most recent trades for a symbol
+  - Example: `get_recent_trades(symbol="BTCUSDT", limit=50)`
+
+- **get_aggregate_trades(symbol, limit=20)**: Get compressed/aggregate trades
+  - Example: `get_aggregate_trades(symbol="ETHUSDT", limit=30)`
+
+- **get_24hr_ticker(symbol)**: Get 24-hour price change statistics
+  - Example: `get_24hr_ticker(symbol="BNBUSDT")`
+
+- **get_all_24hr_tickers()**: Get 24-hour statistics for all symbols
+  - Example: `get_all_24hr_tickers()`
+
+- **get_average_price(symbol)**: Get current average price (5-minute weighted average)
+  - Example: `get_average_price(symbol="BTCUSDT")`
+
+- **get_book_ticker(symbol)**: Get best bid/ask prices and quantities
+  - Example: `get_book_ticker(symbol="ETHBTC")`
+
+- **get_all_book_tickers()**: Get best bid/ask for all symbols
+  - Example: `get_all_book_tickers()`
+
 ### Market Info
 
 - **get_exchange_info()**: Get comprehensive exchange information including trading rules and symbol list
 
 - **get_trading_fees()**: Get the default trading fee rates (note: for demonstration purposes, returns default public fees)
 
+### WebSocket Streams
+
+- **subscribe_to_trade_stream(symbol)**: Subscribe to real-time trade events
+  - Example: `subscribe_to_trade_stream(symbol="BTCUSDT")`
+
+- **subscribe_to_kline_stream(symbol, interval="1m")**: Subscribe to candlestick/kline updates
+  - Example: `subscribe_to_kline_stream(symbol="BTCUSDT", interval="5m")`
+
+- **subscribe_to_ticker_stream(symbol)**: Subscribe to 24hr ticker updates
+  - Example: `subscribe_to_ticker_stream(symbol="ETHUSDT")`
+
+- **subscribe_to_book_ticker_stream(symbol)**: Subscribe to best bid/ask updates
+  - Example: `subscribe_to_book_ticker_stream(symbol="BNBUSDT")`
+
+- **subscribe_to_depth_stream(symbol, levels=10)**: Subscribe to order book updates
+  - Example: `subscribe_to_depth_stream(symbol="BTCUSDT", levels=5)`
+
+- **list_active_subscriptions()**: List all active WebSocket subscriptions
+  - Example: `list_active_subscriptions()`
+
+- **get_latest_stream_data(stream_name)**: Get the latest data from a stream
+  - Example: `get_latest_stream_data(stream_name="btcusdt@trade")`
+
+- **unsubscribe_from_stream(stream_name)**: Unsubscribe from a stream
+  - Example: `unsubscribe_from_stream(stream_name="btcusdt@kline_1m")`
+
+- **cleanup_all_streams()**: Close all WebSocket connections and clean up resources
+  - Example: `cleanup_all_streams()`
+
 ## Project Structure
 
 ```
 binance_mcp_server/  
-├── binance_api.py     # Core API interaction module  
-├── commands/          # MCP command definitions  
+├── binance_api.py       # Core REST API interaction module
+├── binance_ws_api.py    # WebSocket connection management
+├── commands/            # MCP command definitions  
 │   ├── __init__.py  
-│   ├── market_data.py # Price/order book/historical data commands  
-│   └── market_info.py # Exchange info and metadata commands  
-└── server.py          # Main MCP server setup and initialization
+│   ├── market_data.py   # Price/order book/historical data commands  
+│   ├── market_info.py   # Exchange info and metadata commands
+│   └── websocket_streams.py  # WebSocket stream commands
+└── server.py            # Main MCP server setup and initialization
 ```
+
+## Examples
+
+### Getting Current Market Data
+
+```python
+# Get the current price of Bitcoin
+btc_price = get_price(symbol="BTCUSDT")
+
+# Get detailed 24-hour statistics
+btc_stats = get_24hr_ticker(symbol="BTCUSDT")
+print(f"BTC price change: {btc_stats['priceChangePercent']}%")
+print(f"BTC 24h volume: {btc_stats['volume']} BTC")
+```
+
+### Working with WebSocket Streams
+
+```python
+# Subscribe to real-time trade updates
+trade_sub = subscribe_to_trade_stream(symbol="BTCUSDT")
+
+# After some time, get the latest trade data
+latest_trade = get_latest_stream_data(stream_name="btcusdt@trade")
+print(f"Latest trade price: {latest_trade['data']['p']}")
+
+# Subscribe to candlestick updates for chart data
+kline_sub = subscribe_to_kline_stream(symbol="ETHUSDT", interval="5m")
+
+# Clean up when done
+unsubscribe_from_stream(stream_name="btcusdt@trade")
+unsubscribe_from_stream(stream_name="ethusdt@kline_5m")
+```
+
+## Implementation Status
+
+For a detailed overview of the implemented and planned API endpoints, refer to the [API Implementation Status](instructions/api-implementation-status.md) document.
 
 ## Extending the Server
 
@@ -127,6 +219,7 @@ To support authenticated API calls:
 
 - **Connection Issues**: Ensure the server is running before attempting to connect with a client
 - **Rate Limiting**: Binance may rate-limit excessive API calls; consider implementing caching for high-traffic deployments
+- **WebSocket Stability**: WebSocket connections may disconnect after 24 hours (Binance limit); the server will attempt to reconnect automatically
 - **Data Format**: Different symbols or intervals may return data in slightly different formats
 
 ## License
