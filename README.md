@@ -8,7 +8,7 @@ A Model Context Protocol (MCP) server that exposes Binance cryptocurrency exchan
 - **Order Book Access**: Retrieve order book snapshots showing buy/sell interest at different price levels
 - **Historical Price Data**: Fetch OHLCV (Open, High, Low, Close, Volume) candlestick data for any timeframe
 - **Real-time WebSocket Streams**: Subscribe to real-time trade, ticker, and order book updates via WebSockets
-- **Comprehensive Market Data**: Access trades, 24hr statistics, aggregate trades, and more
+- **Comprehensive Market Data**: Access trades, 24hr statistics, aggregate trades, rolling window data, and more
 - **Exchange Information**: Access trading rules, symbol information, and fee structures
 - **Read-only Operation**: All data is fetched via Binance's public REST API (no API keys required)
 - **MCP Standard Compliant**: Works with any MCP-compatible LLM client
@@ -84,6 +84,14 @@ This script connects to the server and retrieves various types of market data.
 
 ## Available Tools
 
+### Connectivity and Basic Info
+
+- **ping_binance()**: Test connectivity to the Binance API server
+  - Example: `ping_binance()`
+
+- **get_server_time()**: Get the current server time from Binance
+  - Example: `get_server_time()`
+
 ### Market Data
 
 - **get_price(symbol)**: Get the current price for a trading pair
@@ -96,8 +104,14 @@ This script connects to the server and retrieves various types of market data.
   - Example: `get_historical_prices(symbol="BTCUSDT", interval="1h", limit=24)`
   - Valid intervals: "1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M"
 
+- **get_ui_klines(symbol, interval="1d", limit=100)**: Get UI-optimized candlestick data
+  - Example: `get_ui_klines(symbol="BTCUSDT", interval="1h", limit=24)`
+
 - **get_recent_trades(symbol, limit=20)**: Get the most recent trades for a symbol
   - Example: `get_recent_trades(symbol="BTCUSDT", limit=50)`
+
+- **get_historical_trades(symbol, limit=20, from_id=None)**: Get older trades for a symbol
+  - Example: `get_historical_trades(symbol="BTCUSDT", limit=100, from_id=12345)`
 
 - **get_aggregate_trades(symbol, limit=20)**: Get compressed/aggregate trades
   - Example: `get_aggregate_trades(symbol="ETHUSDT", limit=30)`
@@ -107,6 +121,18 @@ This script connects to the server and retrieves various types of market data.
 
 - **get_all_24hr_tickers()**: Get 24-hour statistics for all symbols
   - Example: `get_all_24hr_tickers()`
+
+- **get_trading_day_ticker(symbol, type="FULL")**: Get trading day price change statistics
+  - Example: `get_trading_day_ticker(symbol="BTCUSDT", type="FULL")`
+
+- **get_all_trading_day_tickers(type="FULL")**: Get trading day statistics for all symbols
+  - Example: `get_all_trading_day_tickers(type="MINI")`
+
+- **get_rolling_window_ticker(symbol, window_size="1d", type="FULL")**: Get rolling window price statistics
+  - Example: `get_rolling_window_ticker(symbol="BTCUSDT", window_size="4h")`
+
+- **get_all_rolling_window_tickers(window_size="1d", type="FULL")**: Get rolling window stats for all symbols
+  - Example: `get_all_rolling_window_tickers(window_size="4h", type="MINI")`
 
 - **get_average_price(symbol)**: Get current average price (5-minute weighted average)
   - Example: `get_average_price(symbol="BTCUSDT")`
@@ -168,6 +194,16 @@ binance_mcp_server/
 
 ## Examples
 
+### Basic Connectivity
+
+```python
+# Check if Binance API is reachable
+is_connected = ping_binance()
+
+# Get the current server time (milliseconds since epoch)
+server_time = get_server_time()
+```
+
 ### Getting Current Market Data
 
 ```python
@@ -178,6 +214,10 @@ btc_price = get_price(symbol="BTCUSDT")
 btc_stats = get_24hr_ticker(symbol="BTCUSDT")
 print(f"BTC price change: {btc_stats['priceChangePercent']}%")
 print(f"BTC 24h volume: {btc_stats['volume']} BTC")
+
+# Get rolling window statistics (4-hour window)
+btc_4h_stats = get_rolling_window_ticker(symbol="BTCUSDT", window_size="4h")
+print(f"BTC 4h price change: {btc_4h_stats['priceChangePercent']}%")
 ```
 
 ### Working with WebSocket Streams

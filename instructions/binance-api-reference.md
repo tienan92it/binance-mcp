@@ -44,21 +44,21 @@ When implementing private endpoints, we'll need to support at least HMAC SHA256 
 
 | Endpoint | Description | Current Implementation Status |
 |----------|-------------|------------------------------|
-| `GET /api/v3/ping` | Test connectivity | Not implemented |
-| `GET /api/v3/time` | Check server time | Not implemented |
+| `GET /api/v3/ping` | Test connectivity | Implemented in `ping_binance()` |
+| `GET /api/v3/time` | Check server time | Implemented in `get_server_time()` |
 | `GET /api/v3/exchangeInfo` | Exchange information | Implemented in `get_exchange_info()` |
 | `GET /api/v3/depth` | Order book | Implemented in `get_order_book()` |
-| `GET /api/v3/trades` | Recent trades | Not implemented |
-| `GET /api/v3/historicalTrades` | Historical trades | Not implemented |
-| `GET /api/v3/aggTrades` | Compressed/Aggregate trades | Not implemented |
-| `GET /api/v3/klines` | Kline/Candlestick data | Implemented in `get_historical_klines()` |
-| `GET /api/v3/uiKlines` | UIKlines | Not implemented |
-| `GET /api/v3/avgPrice` | Current average price | Not implemented |
-| `GET /api/v3/ticker/24hr` | 24hr ticker price change statistics | Not implemented |
-| `GET /api/v3/ticker/tradingDay` | Trading Day Ticker | Not implemented |
-| `GET /api/v3/ticker/price` | Symbol price ticker | Implemented in `get_live_price()` |
-| `GET /api/v3/ticker/bookTicker` | Symbol order book ticker | Not implemented |
-| `GET /api/v3/ticker` | Rolling window price change statistics | Not implemented |
+| `GET /api/v3/trades` | Recent trades | Implemented in `get_recent_trades()` |
+| `GET /api/v3/historicalTrades` | Historical trades | Implemented in `get_historical_trades()` |
+| `GET /api/v3/aggTrades` | Compressed/Aggregate trades | Implemented in `get_aggregate_trades()` |
+| `GET /api/v3/klines` | Kline/Candlestick data | Implemented in `get_historical_prices()` |
+| `GET /api/v3/uiKlines` | UIKlines | Implemented in `get_ui_klines()` |
+| `GET /api/v3/avgPrice` | Current average price | Implemented in `get_average_price()` |
+| `GET /api/v3/ticker/24hr` | 24hr ticker price change statistics | Implemented in `get_24hr_ticker()` |
+| `GET /api/v3/ticker/tradingDay` | Trading Day Ticker | Implemented in `get_trading_day_ticker()` |
+| `GET /api/v3/ticker/price` | Symbol price ticker | Implemented in `get_price()` |
+| `GET /api/v3/ticker/bookTicker` | Symbol order book ticker | Implemented in `get_book_ticker()` |
+| `GET /api/v3/ticker` | Rolling window price change statistics | Implemented in `get_rolling_window_ticker()` |
 
 ## Trading Endpoints
 
@@ -122,18 +122,18 @@ The WebSocket API provides functionality similar to the REST API but over a pers
 
 | Stream | Description | Current Implementation Status |
 |--------|-------------|------------------------------|
-| `<symbol>@aggTrade` | Aggregate trade streams | Not implemented |
-| `<symbol>@trade` | Trade streams | Not implemented |
-| `<symbol>@kline_<interval>` | Kline/Candlestick streams | Not implemented |
+| `<symbol>@aggTrade` | Aggregate trade streams | Implemented in `subscribe_to_trade_stream()` |
+| `<symbol>@trade` | Trade streams | Implemented in `subscribe_to_trade_stream()` |
+| `<symbol>@kline_<interval>` | Kline/Candlestick streams | Implemented in `subscribe_to_kline_stream()` |
 | `<symbol>@miniTicker` | Individual symbol mini ticker | Not implemented |
 | `!miniTicker@arr` | All market mini tickers | Not implemented |
-| `<symbol>@ticker` | Individual symbol ticker | Not implemented |
+| `<symbol>@ticker` | Individual symbol ticker | Implemented in `subscribe_to_ticker_stream()` |
 | `!ticker@arr` | All market tickers | Not implemented |
 | `<symbol>@windowTicker_<window_size>` | Individual symbol rolling window statistics | Not implemented |
 | `!windowTicker_<window_size>@arr` | All market rolling window statistics | Not implemented |
-| `<symbol>@bookTicker` | Individual symbol book ticker | Not implemented |
+| `<symbol>@bookTicker` | Individual symbol book ticker | Implemented in `subscribe_to_book_ticker_stream()` |
 | `<symbol>@avgPrice` | Average price | Not implemented |
-| `<symbol>@depth<levels>[@100ms]` | Partial book depth streams | Not implemented |
+| `<symbol>@depth<levels>[@100ms]` | Partial book depth streams | Implemented in `subscribe_to_depth_stream()` |
 | `<symbol>@depth[@100ms]` | Diff. depth stream | Not implemented |
 
 ## Integration Strategy
@@ -155,32 +155,47 @@ Based on the available Binance Spot API endpoints and our current implementation
 
 ## Implementation Roadmap
 
-Priority order for implementation:
+### Completed Implementations
 
-1. **Additional Market Data REST Endpoints**
-   - Recent trades
-   - Compressed/Aggregate trades
-   - Current average price
-   - 24hr ticker price change statistics
-   - Symbol order book ticker
+**Market Data REST Endpoints:**
+- Basic connectivity (ping, server time)
+- Symbol price data
+- Order book data
+- Historical klines/candlesticks
+- Recent and historical trades
+- Aggregate trades
+- Average price
+- 24hr ticker price change statistics
+- Book ticker data
+- UI-optimized klines
+- Trading day ticker
+- Rolling window statistics
 
-2. **Basic Authenticated Endpoints**
+**WebSocket Market Data Streams:**
+- Trade streams
+- Kline/candlestick streams
+- Ticker streams
+- Book ticker streams
+- Depth (order book) streams
+
+### Future Implementation Priorities
+
+1. **Authenticated Endpoints**
    - Account information
    - Current open orders
    - Order placement/cancellation
 
-3. **WebSocket Market Data Streams**
-   - Aggregate trade streams
-   - Kline/Candlestick streams
-   - Ticker streams
-   - Book ticker streams
+2. **Additional WebSocket Streams**
+   - All market tickers
+   - Mini-ticker streams
+   - Diff. depth stream
 
-4. **WebSocket User Data Streams**
+3. **User Data Streams**
    - Listen key management
    - Account update streams
    - Order update streams
 
-5. **Advanced Trading Features**
+4. **Advanced Trading Features**
    - OCO orders
    - Order lists
    - SOR orders 

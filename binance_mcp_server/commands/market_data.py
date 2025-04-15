@@ -6,6 +6,24 @@ def register_market_data_commands(mcp: FastMCP):
     """Register MCP commands for market data (prices, order books, historical data)."""
     
     @mcp.tool()
+    def ping_binance() -> bool:
+        """Test connectivity to the Binance API server.
+        
+        Returns:
+            True if the server is reachable, otherwise an error is raised.
+        """
+        return binance_api.ping()
+    
+    @mcp.tool()
+    def get_server_time() -> int:
+        """Get the current server time from Binance.
+        
+        Returns:
+            Server time in milliseconds (UNIX timestamp).
+        """
+        return binance_api.get_server_time()
+    
+    @mcp.tool()
     def get_price(symbol: str) -> float:
         """Get the latest trade price for a given symbol (e.g., 'BTCUSDT')."""
         return binance_api.get_live_price(symbol)
@@ -33,6 +51,22 @@ def register_market_data_commands(mcp: FastMCP):
         return binance_api.get_historical_klines(symbol, interval=interval, limit=limit)
     
     @mcp.tool()
+    def get_ui_klines(symbol: str, interval: str = "1d", limit: int = 100) -> list:
+        """Fetch UI-optimized candlestick data for a symbol.
+        
+        This endpoint returns candlestick data optimized for presentation of a candlestick chart.
+        
+        Args:
+            symbol: Trading pair, e.g., 'BTCUSDT'.
+            interval: Candlestick interval (e.g., '1m', '15m', '1h', '1d').
+            limit: Number of data points to retrieve (max 1000).
+        
+        Returns:
+            List of candlestick data optimized for UI presentation.
+        """
+        return binance_api.get_ui_klines(symbol, interval=interval, limit=limit)
+    
+    @mcp.tool()
     def get_recent_trades(symbol: str, limit: int = 20) -> list:
         """Get recent trades for a symbol.
         
@@ -46,6 +80,22 @@ def register_market_data_commands(mcp: FastMCP):
             List of recent trades with details including price, quantity, and timestamp.
         """
         return binance_api.get_recent_trades(symbol, limit=limit)
+    
+    @mcp.tool()
+    def get_historical_trades(symbol: str, limit: int = 20, from_id: int = None) -> list:
+        """Get historical trades for a symbol.
+        
+        Retrieves older trades that have occurred for a specific trading pair.
+        
+        Args:
+            symbol: Trading pair symbol, e.g., 'BTCUSDT'.
+            limit: Number of trades to fetch (default: 20, max: 1000).
+            from_id: Optional trade ID to fetch from.
+        
+        Returns:
+            List of historical trades with details including price, quantity, and timestamp.
+        """
+        return binance_api.get_historical_trades(symbol, limit=limit, from_id=from_id)
     
     @mcp.tool()
     def get_aggregate_trades(symbol: str, limit: int = 20) -> list:
@@ -89,6 +139,66 @@ def register_market_data_commands(mcp: FastMCP):
             List of dictionaries, each containing 24-hour statistics for a trading pair.
         """
         return binance_api.get_24hr_ticker()
+    
+    @mcp.tool()
+    def get_trading_day_ticker(symbol: str, type: str = "FULL") -> dict:
+        """Get trading day price change statistics for a symbol.
+        
+        Provides statistics for the current trading day (rather than a rolling 24-hour period).
+        
+        Args:
+            symbol: Trading pair symbol, e.g., 'BTCUSDT'.
+            type: Response type ('FULL' or 'MINI'). FULL includes all fields, MINI includes fewer fields.
+            
+        Returns:
+            Dictionary with trading day statistics including price change, volume, and other metrics.
+        """
+        return binance_api.get_trading_day_ticker(symbol, type=type)
+    
+    @mcp.tool()
+    def get_all_trading_day_tickers(type: str = "FULL") -> list:
+        """Get trading day price change statistics for all symbols.
+        
+        Provides statistics for the current trading day for all trading pairs.
+        
+        Args:
+            type: Response type ('FULL' or 'MINI'). FULL includes all fields, MINI includes fewer fields.
+            
+        Returns:
+            List of dictionaries with trading day statistics for all trading pairs.
+        """
+        return binance_api.get_trading_day_ticker(type=type)
+    
+    @mcp.tool()
+    def get_rolling_window_ticker(symbol: str, window_size: str = "1d", type: str = "FULL") -> dict:
+        """Get rolling window price change statistics for a symbol.
+        
+        Provides statistics for a specified rolling window period.
+        
+        Args:
+            symbol: Trading pair symbol, e.g., 'BTCUSDT'.
+            window_size: Size of the rolling window (e.g., '1d', '4h').
+            type: Response type ('FULL' or 'MINI'). FULL includes all fields, MINI includes fewer fields.
+            
+        Returns:
+            Dictionary with rolling window statistics including price change, volume, and other metrics.
+        """
+        return binance_api.get_rolling_window_ticker(symbol, windowSize=window_size, type=type)
+    
+    @mcp.tool()
+    def get_all_rolling_window_tickers(window_size: str = "1d", type: str = "FULL") -> list:
+        """Get rolling window price change statistics for all symbols.
+        
+        Provides statistics for a specified rolling window period for all trading pairs.
+        
+        Args:
+            window_size: Size of the rolling window (e.g., '1d', '4h').
+            type: Response type ('FULL' or 'MINI'). FULL includes all fields, MINI includes fewer fields.
+            
+        Returns:
+            List of dictionaries with rolling window statistics for all trading pairs.
+        """
+        return binance_api.get_rolling_window_ticker(windowSize=window_size, type=type)
     
     @mcp.tool()
     def get_average_price(symbol: str) -> float:

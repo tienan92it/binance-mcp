@@ -19,12 +19,12 @@ This document provides a comprehensive summary of the Binance API integration st
 | **Market Data** | GET /api/v3/ticker/24hr | ✅ Implemented | `get_24hr_ticker()` in market_data.py |
 | **Market Data** | GET /api/v3/avgPrice | ✅ Implemented | `get_average_price()` in market_data.py |
 | **Market Data** | GET /api/v3/ticker/bookTicker | ✅ Implemented | `get_book_ticker()` in market_data.py |
-| **Market Data** | GET /api/v3/ping | ❌ Not Implemented | - |
-| **Market Data** | GET /api/v3/time | ❌ Not Implemented | - |
-| **Market Data** | GET /api/v3/historicalTrades | ❌ Not Implemented | - |
-| **Market Data** | GET /api/v3/uiKlines | ❌ Not Implemented | - |
-| **Market Data** | GET /api/v3/ticker/tradingDay | ❌ Not Implemented | - |
-| **Market Data** | GET /api/v3/ticker | ❌ Not Implemented | - |
+| **Market Data** | GET /api/v3/ping | ✅ Implemented | `ping_binance()` in market_data.py |
+| **Market Data** | GET /api/v3/time | ✅ Implemented | `get_server_time()` in market_data.py |
+| **Market Data** | GET /api/v3/historicalTrades | ✅ Implemented | `get_historical_trades()` in market_data.py |
+| **Market Data** | GET /api/v3/uiKlines | ✅ Implemented | `get_ui_klines()` in market_data.py |
+| **Market Data** | GET /api/v3/ticker/tradingDay | ✅ Implemented | `get_trading_day_ticker()` in market_data.py |
+| **Market Data** | GET /api/v3/ticker | ✅ Implemented | `get_rolling_window_ticker()` in market_data.py |
 | **Trading** | POST /api/v3/order | ❌ Not Implemented | - |
 | **Trading** | POST /api/v3/order/test | ❌ Not Implemented | - |
 | **Trading** | GET /api/v3/order | ❌ Not Implemented | - |
@@ -53,6 +53,15 @@ This document provides a comprehensive summary of the Binance API integration st
 In this update, the following API endpoints and capabilities were added:
 
 ### New REST API Endpoints
+
+1. **Server Status** - `ping_binance()`: Tests connectivity to the Binance API server.
+2. **Server Time** - `get_server_time()`: Gets the current server time from Binance.
+3. **Historical Trades** - `get_historical_trades(symbol, limit, from_id)`: Retrieves older trade data with optional pagination.
+4. **UI Klines** - `get_ui_klines(symbol, interval, limit)`: Fetches UI-optimized candlestick data.
+5. **Trading Day Ticker** - `get_trading_day_ticker(symbol, type)`: Gets statistics for the current trading day.
+6. **Rolling Window Ticker** - `get_rolling_window_ticker(symbol, window_size, type)`: Gets statistics for a specific rolling window period.
+
+### Previous Additions
 
 1. **Recent Trades** - `get_recent_trades(symbol, limit)`: Retrieves the most recent trades for a specific symbol.
 2. **Aggregate Trades** - `get_aggregate_trades(symbol, limit)`: Fetches a compressed view of trades that occurred at the same price.
@@ -104,10 +113,10 @@ The following enhancements are planned for future development:
    - Order lists (OTO, OTOCO)
    - Stop-loss and take-profit orders
 
-2. **Additional Market Data**:
-   - Historical trades with pagination
-   - UIKlines for client-side charting
-   - Rolling window statistics
+2. **Additional WebSocket Streams**:
+   - All market tickers stream
+   - Mini-ticker streams
+   - Diff. depth stream
 
 ### Long-term Priorities
 
@@ -126,10 +135,19 @@ The following enhancements are planned for future development:
 ### REST API Example
 
 ```python
-# REST API tools can be called directly:
+# Basic connectivity and information
+is_connected = ping_binance()
+server_time = get_server_time()
+
+# Market data retrieval
 symbol_price = get_price("BTCUSDT")
 recent_trades = get_recent_trades("ETHBTC", limit=50)
 ticker_data = get_24hr_ticker("BNBUSDT")
+
+# Advanced market data
+historical_trades = get_historical_trades("BTCUSDT", limit=100, from_id=12345)
+ui_optimized_klines = get_ui_klines("ETHUSDT", interval="4h", limit=50)
+rolling_stats = get_rolling_window_ticker("BTCUSDT", window_size="4h")
 ```
 
 ### WebSocket API Example
